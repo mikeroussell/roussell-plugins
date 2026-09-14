@@ -15,11 +15,11 @@ Run these in order. Each one answers a question the spec left open.
 
 ## 2. Cowork on Mike's Mac, GitHub marketplace
 
-- [ ] Marketplace `mikeroussell/roussell-plugins` can be added from the Cowork plugins UI
+- [x] Marketplace `mikeroussell/roussell-plugins` can be added from the Cowork plugins UI (2026-09-14)
 - [x] Transcribe installs (Cowork syncs the marketplace through claude.ai; no key prompt, resolved by the paste-in-chat tool)
 - [x] The Node server launches (Cowork finds `node` on the login-shell PATH)
-- [ ] Paste the key in chat ("Here's my Deepgram key: ...") and confirm Claude replies that it was saved to ~/.transcribe/deepgram-key
-- [ ] A real voice memo transcribes and Claude summarizes it without dumping the transcript
+- [x] Paste the key in chat ("Here's my Deepgram key: ...") and confirm Claude replies that it was saved to ~/.transcribe/deepgram-key (2026-09-14)
+- [x] A real voice memo transcribes and Claude summarizes it without dumping the transcript (2026-09-14, "011 Ask Dr. Mike! final.mp3"; this also exercised the live Deepgram call end to end)
 
 Resolved 2026-09-14: the key prompt does not appear in Cowork, so the kid pastes the key in chat and the `set_deepgram_key` tool stores it. `node` was found via the login-shell PATH.
 
