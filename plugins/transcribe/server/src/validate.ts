@@ -1,4 +1,4 @@
-import { MESSAGES, TranscribeError } from "./errors.js";
+import { MESSAGES, TranscribeError, fromSystemError, isMissingPathError } from "./errors.js";
 import { displayName, extensionOf, type Platform } from "./paths.js";
 
 export const SUPPORTED_EXTENSIONS = [
@@ -40,10 +40,8 @@ export async function validateAudioFile(
   try {
     stat = await statFn(audioPath);
   } catch (err) {
-    const code = (err as { code?: unknown })?.code;
-    if (code === "ENOENT" || code === "ENOTDIR") throw new TranscribeError(MESSAGES.notFound(audioPath));
-    const reason = err instanceof Error && err.message ? err.message.split(/\r?\n/, 1)[0] : "unknown error";
-    throw new TranscribeError(MESSAGES.generic(displayName(audioPath), reason));
+    if (isMissingPathError(err)) throw new TranscribeError(MESSAGES.notFound(audioPath));
+    throw fromSystemError(err, displayName(audioPath));
   }
 
   if (stat.isDirectory()) throw new TranscribeError(MESSAGES.isFolder(audioPath));

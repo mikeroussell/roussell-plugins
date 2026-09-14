@@ -58,6 +58,13 @@ describe("validateAudioFile", () => {
     );
   });
 
+  it("treats something that is neither a file nor a folder as missing", async () => {
+    const oddStat: StatFn = async () => ({ isFile: () => false, isDirectory: () => false, size: 0 });
+    await expect(validateAudioFile("/r/pipe.m4a", "posix", oddStat)).rejects.toThrow(
+      "I couldn't find a file at /r/pipe.m4a. Check the name and folder.",
+    );
+  });
+
   it("reports a permissions failure as a generic error, not as missing", async () => {
     const deniedStat: StatFn = async () => {
       throw Object.assign(new Error("EACCES: permission denied, stat '/r/locked.m4a'"), { code: "EACCES" });

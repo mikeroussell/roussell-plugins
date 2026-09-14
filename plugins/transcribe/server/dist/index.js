@@ -26135,6 +26135,19 @@ var TIMEOUT_NAMES = /* @__PURE__ */ new Set(["DeepgramTimeoutError", "AbortError
 function firstLine(text) {
   return text.split(/\r?\n/, 1)[0].trim();
 }
+function deepgramErrMsg(body) {
+  if (!body || typeof body !== "object") return void 0;
+  const raw = body.err_msg;
+  return typeof raw === "string" && raw.trim() ? firstLine(raw) : void 0;
+}
+function isMissingPathError(err) {
+  const code = err?.code;
+  return code === "ENOENT" || code === "ENOTDIR";
+}
+function fromSystemError(err, name) {
+  const reason = err instanceof Error && err.message ? firstLine(err.message) : "unknown error";
+  return new TranscribeError(MESSAGES.generic(name, reason));
+}
 function mapDeepgramError(err, fileName) {
   if (err instanceof TranscribeError) return err;
   const e = err ?? {};
@@ -26142,12 +26155,14 @@ function mapDeepgramError(err, fileName) {
   const code = typeof e.code === "string" ? e.code : void 0;
   const name = typeof e.name === "string" ? e.name : void 0;
   const message = typeof e.message === "string" && e.message ? e.message : "unknown error";
+  const errMsg = deepgramErrMsg(e.body);
+  if (errMsg && /credit|balance/i.test(errMsg)) return new TranscribeError(MESSAGES.outOfCredit);
   if (status === 401 || status === 403) return new TranscribeError(MESSAGES.keyRejected);
   if (status === 402) return new TranscribeError(MESSAGES.outOfCredit);
   if (status !== void 0 && status >= 500) return new TranscribeError(MESSAGES.notResponding);
   if (code && NETWORK_CODES.has(code)) return new TranscribeError(MESSAGES.notResponding);
   if (name && TIMEOUT_NAMES.has(name)) return new TranscribeError(MESSAGES.notResponding);
-  return new TranscribeError(MESSAGES.generic(fileName, firstLine(message)));
+  return new TranscribeError(MESSAGES.generic(fileName, errMsg ?? firstLine(message)));
 }
 
 // src/paths.ts
@@ -34437,10 +34452,8 @@ async function validateAudioFile(audioPath, platform2, statFn) {
   try {
     stat2 = await statFn(audioPath);
   } catch (err) {
-    const code = err?.code;
-    if (code === "ENOENT" || code === "ENOTDIR") throw new TranscribeError(MESSAGES.notFound(audioPath));
-    const reason = err instanceof Error && err.message ? err.message.split(/\r?\n/, 1)[0] : "unknown error";
-    throw new TranscribeError(MESSAGES.generic(displayName(audioPath), reason));
+    if (isMissingPathError(err)) throw new TranscribeError(MESSAGES.notFound(audioPath));
+    throw fromSystemError(err, displayName(audioPath));
   }
   if (stat2.isDirectory()) throw new TranscribeError(MESSAGES.isFolder(audioPath));
   if (!stat2.isFile()) throw new TranscribeError(MESSAGES.notFound(audioPath));
@@ -34457,10 +34470,8 @@ async function readExisting(filePath, name) {
   try {
     return await readFile(filePath, "utf8");
   } catch (err) {
-    const code = err?.code;
-    if (code === "ENOENT" || code === "ENOTDIR") return null;
-    const reason = err instanceof Error && err.message ? err.message.split(/\r?\n/, 1)[0] : "unknown error";
-    throw new TranscribeError(MESSAGES.generic(name, reason));
+    if (isMissingPathError(err)) return null;
+    throw fromSystemError(err, name);
   }
 }
 async function writeAtomic(filePath, contents) {
@@ -34480,7 +34491,7 @@ async function transcribeAudio(input, deps) {
   const name = displayName(audioPath);
   if (!input.overwrite) {
     const existing = await readExisting(transcriptPath, name);
-    if (existing !== null) {
+    if (existing !== null && existing.trim() !== "") {
       return {
         transcript_path: transcriptPath,
         audio_path: audioPath,

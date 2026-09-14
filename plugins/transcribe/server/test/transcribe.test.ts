@@ -71,6 +71,16 @@ describe("transcribeAudio", () => {
     expect(out.transcript_path).toBe(existing);
   });
 
+  it("treats a blank existing transcript as absent and re-transcribes", async () => {
+    const existing = path.join(dir, "bio-lecture-3.transcript.md");
+    await writeFile(existing, "");
+
+    const out = await transcribeAudio({ file_path: audioPath, overwrite: false }, deps(happy));
+
+    expect(happy).toHaveBeenCalledTimes(1);
+    expect(out.already_existed).toBe(false);
+  });
+
   it("re-transcribes when overwrite is true", async () => {
     const existing = path.join(dir, "bio-lecture-3.transcript.md");
     await writeFile(existing, "old\n");
@@ -113,17 +123,20 @@ describe("transcribeAudio", () => {
     expect(names.sort()).toEqual(["bio-lecture-3.m4a", "bio-lecture-3.transcript.md"]);
   });
 
-  it("reports an unreadable existing transcript instead of silently re-transcribing", async () => {
-    const existing = path.join(dir, "bio-lecture-3.transcript.md");
-    await writeFile(existing, "locked\n");
-    await chmod(existing, 0o000);
-    try {
-      await expect(transcribeAudio({ file_path: audioPath, overwrite: false }, deps(happy))).rejects.toThrow(
-        /^Something went wrong transcribing bio-lecture-3\.m4a: EACCES: permission denied/,
-      );
-      expect(happy).not.toHaveBeenCalled();
-    } finally {
-      await chmod(existing, 0o644);
-    }
-  });
+  it.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+    "reports an unreadable existing transcript instead of silently re-transcribing",
+    async () => {
+      const existing = path.join(dir, "bio-lecture-3.transcript.md");
+      await writeFile(existing, "locked\n");
+      await chmod(existing, 0o000);
+      try {
+        await expect(transcribeAudio({ file_path: audioPath, overwrite: false }, deps(happy))).rejects.toThrow(
+          /^Something went wrong transcribing bio-lecture-3\.m4a: EACCES: permission denied/,
+        );
+        expect(happy).not.toHaveBeenCalled();
+      } finally {
+        await chmod(existing, 0o644);
+      }
+    },
+  );
 });

@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -15,21 +15,21 @@ describe("Deepgram integration", () => {
     "transcribes a real clip",
     async () => {
       const dir = await mkdtemp(path.join(tmpdir(), "transcribe-it-"));
-      const audioPath = path.join(dir, "nasa.wav");
-      const res = await fetch(SAMPLE_URL);
-      await writeFile(audioPath, Buffer.from(await res.arrayBuffer()));
+      try {
+        const audioPath = path.join(dir, "nasa.wav");
+        const res = await fetch(SAMPLE_URL);
+        await writeFile(audioPath, Buffer.from(await res.arrayBuffer()));
 
-      const transcribe = createDeepgramTranscriber(apiKey as string);
-      const result = await transcribe(audioPath);
+        const transcribe = createDeepgramTranscriber(apiKey as string);
+        const result = await transcribe(audioPath);
 
-      expect(result.transcript.length).toBeGreaterThan(50);
-      expect(result.paragraphs.length).toBeGreaterThan(0);
-      expect(result.durationSeconds).toBeGreaterThan(5);
+        expect(result.transcript.length).toBeGreaterThan(50);
+        expect(result.paragraphs.length).toBeGreaterThan(0);
+        expect(result.durationSeconds).toBeGreaterThan(5);
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
     },
     120_000,
   );
-
-  it.skipIf(enabled)("is skipped without RUN_DEEPGRAM_INTEGRATION=1 and a key", () => {
-    expect(enabled).toBe(false);
-  });
 });

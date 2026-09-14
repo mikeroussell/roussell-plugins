@@ -1,6 +1,6 @@
 import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { MODEL, type Transcriber } from "./deepgram.js";
-import { MESSAGES, TranscribeError } from "./errors.js";
+import { MESSAGES, TranscribeError, fromSystemError, isMissingPathError } from "./errors.js";
 import { renderTranscript } from "./format.js";
 import { displayName, resolveAudioPath, transcriptPathFor, type Platform } from "./paths.js";
 import { validateAudioFile } from "./validate.js";
@@ -32,10 +32,8 @@ async function readExisting(filePath: string, name: string): Promise<string | nu
   try {
     return await readFile(filePath, "utf8");
   } catch (err) {
-    const code = (err as { code?: unknown })?.code;
-    if (code === "ENOENT" || code === "ENOTDIR") return null;
-    const reason = err instanceof Error && err.message ? err.message.split(/\r?\n/, 1)[0] : "unknown error";
-    throw new TranscribeError(MESSAGES.generic(name, reason));
+    if (isMissingPathError(err)) return null;
+    throw fromSystemError(err, name);
   }
 }
 
@@ -64,7 +62,7 @@ export async function transcribeAudio(input: TranscribeInput, deps: TranscribeDe
 
   if (!input.overwrite) {
     const existing = await readExisting(transcriptPath, name);
-    if (existing !== null) {
+    if (existing !== null && existing.trim() !== "") {
       return {
         transcript_path: transcriptPath,
         audio_path: audioPath,

@@ -12,7 +12,7 @@ You need three things: Node, the plugin, and your key from Dad.
 
 **1. Install Node**
 
-Go to https://nodejs.org and download the LTS version.
+Go to https://nodejs.org and download the LTS version (the green button).
 
 - Mac: open the `.pkg` and click through with the defaults.
 - Windows: open the `.msi` and click through with the defaults. Leave "Add to PATH" checked.

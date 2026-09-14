@@ -22,6 +22,10 @@ describe("resolveAudioPath (posix)", () => {
   it("trims surrounding whitespace", () => {
     expect(resolveAudioPath("  /tmp/a.mp3  ", "/Users/kid", "posix")).toBe("/tmp/a.mp3");
   });
+
+  it("expands a bare ~ to the home directory", () => {
+    expect(resolveAudioPath("~", "/Users/kid", "posix")).toBe("/Users/kid");
+  });
 });
 
 describe("resolveAudioPath (win32)", () => {

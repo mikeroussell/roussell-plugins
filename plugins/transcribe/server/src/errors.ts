@@ -45,10 +45,30 @@ interface ErrorLike {
   code?: unknown;
   name?: unknown;
   message?: unknown;
+  body?: unknown;
 }
 
 function firstLine(text: string): string {
   return text.split(/\r?\n/, 1)[0].trim();
+}
+
+/** Deepgram's own `err_msg` from the response body, first line trimmed, when present and non-empty. */
+function deepgramErrMsg(body: unknown): string | undefined {
+  if (!body || typeof body !== "object") return undefined;
+  const raw = (body as { err_msg?: unknown }).err_msg;
+  return typeof raw === "string" && raw.trim() ? firstLine(raw) : undefined;
+}
+
+/** true when a filesystem error means the path simply is not there */
+export function isMissingPathError(err: unknown): boolean {
+  const code = (err as { code?: unknown })?.code;
+  return code === "ENOENT" || code === "ENOTDIR";
+}
+
+/** Map a non-missing filesystem error to the kid-facing generic message. */
+export function fromSystemError(err: unknown, name: string): TranscribeError {
+  const reason = err instanceof Error && err.message ? firstLine(err.message) : "unknown error";
+  return new TranscribeError(MESSAGES.generic(name, reason));
 }
 
 /**
@@ -63,12 +83,14 @@ export function mapDeepgramError(err: unknown, fileName: string): TranscribeErro
   const code = typeof e.code === "string" ? e.code : undefined;
   const name = typeof e.name === "string" ? e.name : undefined;
   const message = typeof e.message === "string" && e.message ? e.message : "unknown error";
+  const errMsg = deepgramErrMsg(e.body);
 
+  if (errMsg && /credit|balance/i.test(errMsg)) return new TranscribeError(MESSAGES.outOfCredit);
   if (status === 401 || status === 403) return new TranscribeError(MESSAGES.keyRejected);
   if (status === 402) return new TranscribeError(MESSAGES.outOfCredit);
   if (status !== undefined && status >= 500) return new TranscribeError(MESSAGES.notResponding);
   if (code && NETWORK_CODES.has(code)) return new TranscribeError(MESSAGES.notResponding);
   if (name && TIMEOUT_NAMES.has(name)) return new TranscribeError(MESSAGES.notResponding);
 
-  return new TranscribeError(MESSAGES.generic(fileName, firstLine(message)));
+  return new TranscribeError(MESSAGES.generic(fileName, errMsg ?? firstLine(message)));
 }
