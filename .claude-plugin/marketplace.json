@@ -1,0 +1,14 @@
+{
+  "name": "roussell-plugins",
+  "owner": {
+    "name": "Mike Roussell"
+  },
+  "plugins": [
+    {
+      "name": "transcribe",
+      "source": "./plugins/transcribe",
+      "description": "Turn audio recordings into text transcripts with Deepgram",
+      "version": "0.1.0"
+    }
+  ]
+}

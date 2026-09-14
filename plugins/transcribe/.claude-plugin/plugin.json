@@ -1,0 +1,17 @@
+{
+  "name": "transcribe",
+  "version": "0.1.0",
+  "description": "Turn audio recordings into text transcripts with Deepgram",
+  "author": {
+    "name": "Mike Roussell"
+  },
+  "userConfig": {
+    "deepgram_api_key": {
+      "type": "string",
+      "title": "Deepgram API Key",
+      "description": "The key Dad gave you. Paste it here once.",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}
