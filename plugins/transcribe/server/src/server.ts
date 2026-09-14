@@ -67,7 +67,8 @@ export function createServer(deps: ServerDeps): McpServer {
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
-        idempotentHint: true,
+        // Not idempotent: overwrite: true re-transcribes (re-bills) and rewrites the file.
+        idempotentHint: false,
         openWorldHint: true,
       },
     },

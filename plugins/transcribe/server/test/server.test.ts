@@ -36,6 +36,7 @@ describe("transcribe_audio tool", () => {
     const schema = tools[0].inputSchema as { properties: Record<string, unknown>; required?: string[] };
     expect(Object.keys(schema.properties).sort()).toEqual(["file_path", "overwrite"]);
     expect(schema.required).toEqual(["file_path"]);
+    expect(tools[0].annotations?.idempotentHint).toBe(false);
   });
 
   it("returns the saved-path line, the markdown, and structured content", async () => {
