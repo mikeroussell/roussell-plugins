@@ -25,11 +25,13 @@ In the Claude app, open Plugins, choose Add marketplace, and enter:
 
 Then install **Transcribe** from the list.
 
-**3. Paste your key**
+**3. Give Claude your key**
 
-When you enable Transcribe, it asks for a Deepgram API Key. Paste the key Dad gave you. You only do this once.
+Ask Dad for your Deepgram key. Then, in a Claude chat, paste it like this:
 
-If you don't get asked for a key, tell Dad. He'll help you put it in a settings file instead.
+    Here's my Deepgram key: (paste the key)
+
+Claude saves it on your computer and tells you it's set. You only do this once. If you ever get a new key from Dad, paste it the same way and it replaces the old one.
 
 ### Use it
 
@@ -54,7 +56,8 @@ Claude will tell you what happened in plain words. If it says to tell Dad, tell 
 ## For Dad
 
 - Create one Deepgram API key per kid in the Deepgram console, named after the kid. Usage in the console is broken out per key. Revoke a key to cut one kid off without affecting the others.
-- Fallback if the key prompt doesn't appear: set `DEEPGRAM_API_KEY` in the kid's Claude settings file `env` block, then restart the app.
+- The pasted key is saved to `~/.transcribe/deepgram-key` (user-only permissions) by the `set_deepgram_key` tool. To rotate, the kid pastes the new key; to revoke, delete the key in the Deepgram console. The plugin also honors `CLAUDE_PLUGIN_OPTION_DEEPGRAM_API_KEY` (Claude Code's `/plugin configure`) and `DEEPGRAM_API_KEY` as fallbacks.
+- Cowork installs plugins through claude.ai sync and does not show Claude Code's `userConfig` prompt, which is why the paste-in-chat flow exists.
 - Development lives in `plugins/transcribe/server`. Run `npm test`, `npm run typecheck`, and `npm run build` before committing. The `dist/` bundle is committed on purpose; CI fails if it is stale.
 - The live Deepgram integration test is opt-in: DEEPGRAM_API_KEY=<key> npm run test:integration.
 - Local install for testing: `claude plugin marketplace add /path/to/roussell-plugins` then `claude plugin install transcribe@roussell-plugins`.

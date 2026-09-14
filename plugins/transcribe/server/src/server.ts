@@ -6,9 +6,12 @@ import { displayName } from "./paths.js";
 import type { TranscribeInput, TranscribeOutput } from "./transcribe.js";
 
 export type TranscribeFn = (input: TranscribeInput) => Promise<TranscribeOutput>;
+/** Persist a pasted key; resolves to the path it was saved at. */
+export type StoreKeyFn = (apiKey: string) => Promise<string>;
 
 export interface ServerDeps {
   transcribe: TranscribeFn;
+  storeKey: StoreKeyFn;
 }
 
 const inputSchema = {
@@ -48,14 +51,24 @@ function successText(out: TranscribeOutput): string {
   return `${head}\n\n${out.markdown}`;
 }
 
+const KEY_DESCRIPTION = `Save the user's Deepgram API key so transcribe_audio can use it. Call this when the user pastes a Deepgram key or says Dad gave them a key. Ask for the key only if transcribe_audio reported that no key is set. Never repeat the key back to the user.`;
+
+function reasonOf(err: unknown): string {
+  return err instanceof Error && err.message ? err.message : "unknown error";
+}
+
+function keyErrorText(err: unknown): string {
+  if (err instanceof TranscribeError) return err.message;
+  return MESSAGES.keySaveFailed(reasonOf(err));
+}
+
 function errorText(err: unknown, filePath: string): string {
   if (err instanceof TranscribeError) return err.message;
-  const reason = err instanceof Error && err.message ? err.message : "unknown error";
-  return MESSAGES.generic(displayName(filePath), reason);
+  return MESSAGES.generic(displayName(filePath), reasonOf(err));
 }
 
 export function createServer(deps: ServerDeps): McpServer {
-  const server = new McpServer({ name: "transcribe", version: "0.1.0" });
+  const server = new McpServer({ name: "transcribe", version: "0.2.0" });
 
   server.registerTool(
     "transcribe_audio",
@@ -90,6 +103,35 @@ export function createServer(deps: ServerDeps): McpServer {
           isError: true,
           content: [{ type: "text" as const, text: errorText(err, file_path) }],
         };
+      }
+    },
+  );
+
+  server.registerTool(
+    "set_deepgram_key",
+    {
+      title: "Save Deepgram Key",
+      description: KEY_DESCRIPTION,
+      inputSchema: {
+        api_key: z.string().min(1).describe("The Deepgram API key exactly as the user pasted it."),
+      },
+      outputSchema: { saved_to: z.string() },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ api_key }) => {
+      try {
+        const savedTo = await deps.storeKey(api_key);
+        return {
+          content: [{ type: "text" as const, text: MESSAGES.keySaved(savedTo) }],
+          structuredContent: { saved_to: savedTo },
+        };
+      } catch (err) {
+        return { isError: true, content: [{ type: "text" as const, text: keyErrorText(err) }] };
       }
     },
   );

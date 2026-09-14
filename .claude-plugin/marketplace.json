@@ -8,7 +8,7 @@
       "name": "transcribe",
       "source": "./plugins/transcribe",
       "description": "Turn audio recordings into text transcripts with Deepgram",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }

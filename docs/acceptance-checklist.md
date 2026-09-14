@@ -16,22 +16,23 @@ Run these in order. Each one answers a question the spec left open.
 ## 2. Cowork on Mike's Mac, GitHub marketplace
 
 - [ ] Marketplace `mikeroussell/roussell-plugins` can be added from the Cowork plugins UI
-- [ ] Transcribe installs and the key prompt appears (userConfig works in Cowork)
-- [ ] The Node server launches (Cowork finds `node` on PATH)
+- [x] Transcribe installs (Cowork syncs the marketplace through claude.ai; no key prompt, resolved by the paste-in-chat tool)
+- [x] The Node server launches (Cowork finds `node` on the login-shell PATH)
+- [ ] Paste the key in chat ("Here's my Deepgram key: ...") and confirm Claude replies that it was saved to ~/.transcribe/deepgram-key
 - [ ] A real voice memo transcribes and Claude summarizes it without dumping the transcript
 
-If the key prompt does not appear: document the settings-file `env` fallback in the README's "For Dad" section with the exact file path Cowork uses, and re-test.
-If `node` is not found: change `.mcp.json` `command` to an absolute path per platform and re-test.
+Resolved 2026-09-14: the key prompt does not appear in Cowork, so the kid pastes the key in chat and the `set_deepgram_key` tool stores it. `node` was found via the login-shell PATH.
 
 ## 3. Windows kid's PC, GitHub marketplace
 
 - [ ] Node LTS installs with defaults and `node --version` works in a new terminal
-- [ ] Marketplace add + Transcribe install + key prompt all work in Cowork for Windows
+- [ ] Marketplace add + Transcribe install work in Cowork for Windows, and pasting the key in chat saves it (path will be under C:\Users\<kid>\.transcribe)
 - [ ] A file with a `C:\Users\...` path and an uppercase `.MP3` extension transcribes
 - [ ] The transcript lands beside the audio with a Windows path
 
 ## 4. Kid-language errors
 
-- [ ] Remove the key, ask to transcribe: Claude relays the "Ask Dad for your key" message
+- [ ] Delete ~/.transcribe/deepgram-key, ask to transcribe: Claude relays the "paste it here and I'll save it" message
+- [ ] Paste a blank or broken key: Claude relays "That doesn't look like a Deepgram key"
 - [ ] Ask to transcribe a `.txt` file: Claude relays the "isn't a supported audio type" message
 - [ ] Ask to transcribe a file that doesn't exist: Claude relays the "couldn't find a file" message

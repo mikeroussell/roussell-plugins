@@ -6963,8 +6963,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path2) {
-      let input = path2;
+    function removeDotSegments(path3) {
+      let input = path3;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -7373,8 +7373,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path2 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path2 && path2 !== "/" ? path2 : void 0;
+        const path3 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path3 && path3 !== "/" ? path3 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -11100,10 +11100,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path2) {
-  if (!path2)
+function getElementAtPath(obj, path3) {
+  if (!path3)
     return obj;
-  return path2.reduce((acc, key) => acc?.[key], obj);
+  return path3.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -11423,11 +11423,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path2, issues) {
+function prefixIssues(path3, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path2);
+    iss.path.unshift(path3);
     return iss;
   });
 }
@@ -18700,7 +18700,7 @@ function getFileWithMetadata(file_1) {
 function isFileLike(value) {
   return isBuffer(value) || isArrayBufferView(value) || isArrayBuffer(value) || isUint8Array(value) || isBlob(value) || isFile(value) || isStreamLike(value) || isReadableStream(value);
 }
-function tryGetFileSizeFromPath(path2) {
+function tryGetFileSizeFromPath(path3) {
   return __awaiter12(this, void 0, void 0, function* () {
     var _a;
     try {
@@ -18708,7 +18708,7 @@ function tryGetFileSizeFromPath(path2) {
       if (!((_a = fs === null || fs === void 0 ? void 0 : fs.promises) === null || _a === void 0 ? void 0 : _a.stat)) {
         return void 0;
       }
-      const fileStat = yield fs.promises.stat(path2);
+      const fileStat = yield fs.promises.stat(path3);
       return fileStat.size;
     } catch (_fallbackError) {
       return void 0;
@@ -18759,11 +18759,11 @@ function tryGetContentTypeFromFileLike(data) {
   }
   return void 0;
 }
-function getNameFromPath(path2) {
-  const lastForwardSlash = path2.lastIndexOf("/");
-  const lastBackSlash = path2.lastIndexOf("\\");
+function getNameFromPath(path3) {
+  const lastForwardSlash = path3.lastIndexOf("/");
+  const lastBackSlash = path3.lastIndexOf("\\");
   const lastSlashIndex = Math.max(lastForwardSlash, lastBackSlash);
-  return lastSlashIndex >= 0 ? path2.substring(lastSlashIndex + 1) : path2;
+  return lastSlashIndex >= 0 ? path3.substring(lastSlashIndex + 1) : path3;
 }
 function isNamedValue(value) {
   return typeof value === "object" && value != null && "name" in value;
@@ -19544,7 +19544,7 @@ function withNoOpAuthProvider(options) {
 }
 
 // node_modules/@deepgram/sdk/dist/esm/errors/handleNonStatusCodeError.mjs
-function handleNonStatusCodeError(error2, rawResponse, method, path2) {
+function handleNonStatusCodeError(error2, rawResponse, method, path3) {
   switch (error2.reason) {
     case "non-json":
       throw new DeepgramError({
@@ -19558,7 +19558,7 @@ function handleNonStatusCodeError(error2, rawResponse, method, path2) {
         rawResponse
       });
     case "timeout":
-      throw new DeepgramTimeoutError(`Timeout exceeded when calling ${method} ${path2}.`, {
+      throw new DeepgramTimeoutError(`Timeout exceeded when calling ${method} ${path3}.`, {
         cause: error2.cause
       });
     case "unknown":
@@ -26111,12 +26111,15 @@ var TranscribeError = class extends Error {
   }
 };
 var MESSAGES = {
-  noKey: "No Deepgram key is set. Ask Dad for your key, then re-enable the Transcribe plugin.",
+  noKey: "No Deepgram key is set. Ask Dad for your key, then paste it here and I'll save it.",
   keyRejected: "Deepgram rejected your key. Ask Dad to check it.",
+  badKey: "That doesn't look like a Deepgram key. Ask Dad to send it again.",
+  keySaved: (path3) => `Saved your Deepgram key to ${path3}. You're all set. Ask me to transcribe a recording.`,
+  keySaveFailed: (reason) => `I couldn't save your key: ${reason}. Tell Dad if it keeps happening.`,
   outOfCredit: "The Deepgram account is out of credit. Tell Dad.",
   notResponding: "Deepgram isn't responding right now. Try again in a few minutes.",
-  notFound: (path2) => `I couldn't find a file at ${path2}. Check the name and folder.`,
-  isFolder: (path2) => `${path2} is a folder, not a file.`,
+  notFound: (path3) => `I couldn't find a file at ${path3}. Check the name and folder.`,
+  isFolder: (path3) => `${path3} is a folder, not a file.`,
   unsupported: (name) => `${name} isn't a supported audio type. Try exporting it as MP3 or M4A.`,
   tooBig: (name) => `${name} is too big to transcribe (over 2 GB). Try splitting it or exporting a smaller version.`,
   empty: (name) => `Deepgram didn't hear any speech in ${name}. Check that it recorded properly.`,
@@ -26233,6 +26236,41 @@ function createDeepgramTranscriber(apiKey) {
       throw mapDeepgramError(err, displayName(audioPath));
     }
   };
+}
+
+// src/keystore.ts
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import path2 from "node:path";
+function keyFilePath(homeDir) {
+  return path2.join(homeDir, ".transcribe", "deepgram-key");
+}
+async function readStoredKey(homeDir) {
+  try {
+    const value = (await readFile(keyFilePath(homeDir), "utf8")).trim();
+    return value || void 0;
+  } catch (err) {
+    if (isMissingPathError(err)) return void 0;
+    throw err;
+  }
+}
+async function storeKey(homeDir, key) {
+  const trimmed = key.trim();
+  if (!trimmed || /\s/.test(trimmed)) throw new TranscribeError(MESSAGES.badKey);
+  const target = keyFilePath(homeDir);
+  await mkdir(path2.dirname(target), { recursive: true, mode: 448 });
+  const tmp = `${target}.tmp-${process.pid}`;
+  try {
+    await writeFile(tmp, `${trimmed}
+`, { encoding: "utf8", mode: 384 });
+    await rename(tmp, target);
+  } catch (err) {
+    await rm(tmp, { force: true });
+    throw err;
+  }
+  return target;
+}
+async function resolveApiKey(env, homeDir) {
+  return await readStoredKey(homeDir) ?? readApiKey(env);
 }
 
 // node_modules/zod/v3/external.js
@@ -26713,8 +26751,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path2, errorMaps, issueData } = params;
-  const fullPath = [...path2, ...issueData.path || []];
+  const { data, path: path3, errorMaps, issueData } = params;
+  const fullPath = [...path3, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -26830,11 +26868,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path2, key) {
+  constructor(parent, value, path3, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path2;
+    this._path = path3;
     this._key = key;
   }
   get path() {
@@ -30406,11 +30444,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path2) {
-  if (path2.length === 0) {
+function getDotPath(path3) {
+  if (path3.length === 0) {
     return "object root";
   }
-  return path2.reduce((acc, seg, index) => {
+  return path3.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -34383,13 +34421,20 @@ function successText(out) {
 
 ${out.markdown}`;
 }
+var KEY_DESCRIPTION = `Save the user's Deepgram API key so transcribe_audio can use it. Call this when the user pastes a Deepgram key or says Dad gave them a key. Ask for the key only if transcribe_audio reported that no key is set. Never repeat the key back to the user.`;
+function reasonOf(err) {
+  return err instanceof Error && err.message ? err.message : "unknown error";
+}
+function keyErrorText(err) {
+  if (err instanceof TranscribeError) return err.message;
+  return MESSAGES.keySaveFailed(reasonOf(err));
+}
 function errorText(err, filePath) {
   if (err instanceof TranscribeError) return err.message;
-  const reason = err instanceof Error && err.message ? err.message : "unknown error";
-  return MESSAGES.generic(displayName(filePath), reason);
+  return MESSAGES.generic(displayName(filePath), reasonOf(err));
 }
 function createServer(deps) {
-  const server2 = new McpServer({ name: "transcribe", version: "0.1.0" });
+  const server2 = new McpServer({ name: "transcribe", version: "0.2.0" });
   server2.registerTool(
     "transcribe_audio",
     {
@@ -34426,11 +34471,39 @@ function createServer(deps) {
       }
     }
   );
+  server2.registerTool(
+    "set_deepgram_key",
+    {
+      title: "Save Deepgram Key",
+      description: KEY_DESCRIPTION,
+      inputSchema: {
+        api_key: external_exports.string().min(1).describe("The Deepgram API key exactly as the user pasted it.")
+      },
+      outputSchema: { saved_to: external_exports.string() },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false
+      }
+    },
+    async ({ api_key }) => {
+      try {
+        const savedTo = await deps.storeKey(api_key);
+        return {
+          content: [{ type: "text", text: MESSAGES.keySaved(savedTo) }],
+          structuredContent: { saved_to: savedTo }
+        };
+      } catch (err) {
+        return { isError: true, content: [{ type: "text", text: keyErrorText(err) }] };
+      }
+    }
+  );
   return server2;
 }
 
 // src/transcribe.ts
-import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { readFile as readFile2, rename as rename2, rm as rm2, stat, writeFile as writeFile2 } from "node:fs/promises";
 
 // src/validate.ts
 var SUPPORTED_EXTENSIONS = [
@@ -34468,7 +34541,7 @@ async function validateAudioFile(audioPath, platform2, statFn) {
 // src/transcribe.ts
 async function readExisting(filePath, name) {
   try {
-    return await readFile(filePath, "utf8");
+    return await readFile2(filePath, "utf8");
   } catch (err) {
     if (isMissingPathError(err)) return null;
     throw fromSystemError(err, name);
@@ -34477,10 +34550,10 @@ async function readExisting(filePath, name) {
 async function writeAtomic(filePath, contents) {
   const tmp = `${filePath}.tmp-${process.pid}`;
   try {
-    await writeFile(tmp, contents, "utf8");
-    await rename(tmp, filePath);
+    await writeFile2(tmp, contents, "utf8");
+    await rename2(tmp, filePath);
   } catch (err) {
-    await rm(tmp, { force: true });
+    await rm2(tmp, { force: true });
     throw err;
   }
 }
@@ -34525,7 +34598,7 @@ async function transcribeAudio(input, deps) {
 var platform = process.platform === "win32" ? "win32" : "posix";
 var server = createServer({
   transcribe: async (input) => {
-    const apiKey = readApiKey(process.env);
+    const apiKey = await resolveApiKey(process.env, homedir());
     if (!apiKey) throw new TranscribeError(MESSAGES.noKey);
     return transcribeAudio(input, {
       transcriber: createDeepgramTranscriber(apiKey),
@@ -34533,7 +34606,8 @@ var server = createServer({
       homeDir: homedir(),
       platform
     });
-  }
+  },
+  storeKey: (apiKey) => storeKey(homedir(), apiKey)
 });
 var transport = new StdioServerTransport();
 await server.connect(transport);

@@ -10,9 +10,12 @@ export class TranscribeError extends Error {
 }
 
 export const MESSAGES = {
-  noKey:
-    "No Deepgram key is set. Ask Dad for your key, then re-enable the Transcribe plugin.",
+  noKey: "No Deepgram key is set. Ask Dad for your key, then paste it here and I'll save it.",
   keyRejected: "Deepgram rejected your key. Ask Dad to check it.",
+  badKey: "That doesn't look like a Deepgram key. Ask Dad to send it again.",
+  keySaved: (path: string) =>
+    `Saved your Deepgram key to ${path}. You're all set. Ask me to transcribe a recording.`,
+  keySaveFailed: (reason: string) => `I couldn't save your key: ${reason}. Tell Dad if it keeps happening.`,
   outOfCredit: "The Deepgram account is out of credit. Tell Dad.",
   notResponding: "Deepgram isn't responding right now. Try again in a few minutes.",
   notFound: (path: string) =>

@@ -1,7 +1,7 @@
 # Transcribe Plugin: Design Spec
 
 Date: 2026-09-14
-Status: Draft for review
+Status: Implemented 2026-09-14; amended same day for Cowork key handling (see section 2)
 Repo: `roussell-plugins` (personal GitHub account, public), local checkout `apps/roussell-plugins`
 
 ## 1. Purpose
@@ -93,7 +93,9 @@ No shell wrapper, so it behaves the same on macOS and Windows. Node must be on P
 
 **SKILL.md** tells Claude: when the user mentions a recording, voice memo, lecture, interview, or audio file, call `transcribe_audio` with the file's path. After it returns, do not paste the full transcript into chat. Say where it was saved, then do what the user asked (notes, summary, answer a question). If the tool reports a transcript already existed, say so briefly and continue.
 
-**MCP server** exposes exactly one tool. It reads the key from `CLAUDE_PLUGIN_OPTION_DEEPGRAM_API_KEY`, falling back to `DEEPGRAM_API_KEY` (the settings-file fallback if Cowork does not support `userConfig`). It never logs or writes the key.
+**MCP server** exposes two tools: `transcribe_audio` and `set_deepgram_key`. The key is resolved per call: first `~/.transcribe/deepgram-key` (written by `set_deepgram_key` with user-only permissions when the kid pastes their key in chat), then `CLAUDE_PLUGIN_OPTION_DEEPGRAM_API_KEY`, then `DEEPGRAM_API_KEY`. The server never logs the key or echoes it in any message.
+
+Amendment 2026-09-14 (after the first Cowork install): Cowork installs plugins through claude.ai sync and launches the bundled server with the user's home directory, login-shell PATH, and `CLAUDE_PLUGIN_ROOT`, but does not show the `userConfig` prompt or inject `CLAUDE_PLUGIN_OPTION_*`. The paste-in-chat tool is therefore the primary key path for the kids; the env variables remain as fallbacks. Trade-off accepted: the key passes through one chat message.
 
 ## 3. The tool: `transcribe_audio`
 
@@ -156,7 +158,9 @@ All failures return an MCP tool error (`isError: true`) whose text is written fo
 
 | Condition | Message |
 |---|---|
-| No key in either env var | "No Deepgram key is set. Ask Dad for your key, then re-enable the Transcribe plugin." |
+| No key stored or in either env var | "No Deepgram key is set. Ask Dad for your key, then paste it here and I'll save it." |
+| Pasted key blank or contains spaces (`set_deepgram_key`) | "That doesn't look like a Deepgram key. Ask Dad to send it again." |
+| Key file could not be written | "I couldn't save your key: <one-line reason>. Tell Dad if it keeps happening." |
 | Deepgram 401 / 403 | "Deepgram rejected your key. Ask Dad to check it." |
 | Deepgram 402 or insufficient-credits response | "The Deepgram account is out of credit. Tell Dad." |
 | File not found | "I couldn't find a file at <path>. Check the name and folder." |

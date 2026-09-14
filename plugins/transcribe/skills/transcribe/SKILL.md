@@ -1,6 +1,6 @@
 ---
 name: transcribe
-description: Turn an audio or video recording (voice memo, lecture, interview, MP3/M4A/WAV file) into a text transcript saved beside the file, then summarize it, make study notes, or answer questions about it. Use whenever the user mentions a recording or audio file.
+description: Turn an audio or video recording (voice memo, lecture, interview, MP3/M4A/WAV file) into a text transcript saved beside the file, then summarize it, make study notes, or answer questions about it. Use whenever the user mentions a recording or audio file, or pastes a Deepgram key.
 ---
 
 # Transcribe a recording
@@ -21,6 +21,12 @@ The user mentions a recording, voice memo, lecture, interview, podcast file, or 
 - Do not paste the whole transcript into the chat. It is already in the file.
 - Then do what the user actually asked: study notes, a summary, key points, or an answer to their question, using the transcript text you received.
 - If the tool says a transcript already existed, mention that briefly and continue with the saved text.
+
+## Setting up the key
+
+- If `transcribe_audio` says no Deepgram key is set, relay that message: the user needs to ask Dad for their key and paste it in the chat.
+- When the user pastes a key, or says Dad gave them a key and includes it, call `set_deepgram_key` with the key exactly as pasted, then retry what they originally asked.
+- Never repeat the key back in the chat and never write it anywhere else.
 
 ## If it fails
 

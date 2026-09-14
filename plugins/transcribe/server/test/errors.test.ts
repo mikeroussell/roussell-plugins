@@ -10,7 +10,7 @@ class FakeDeepgramError extends Error {
 describe("MESSAGES", () => {
   it("uses the exact spec wording for the missing-key case", () => {
     expect(MESSAGES.noKey).toBe(
-      "No Deepgram key is set. Ask Dad for your key, then re-enable the Transcribe plugin.",
+      "No Deepgram key is set. Ask Dad for your key, then paste it here and I'll save it.",
     );
   });
 
