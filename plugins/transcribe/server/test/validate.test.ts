@@ -57,4 +57,13 @@ describe("validateAudioFile", () => {
       "I couldn't find a file at /r/nope.txt. Check the name and folder.",
     );
   });
+
+  it("reports a permissions failure as a generic error, not as missing", async () => {
+    const deniedStat: StatFn = async () => {
+      throw Object.assign(new Error("EACCES: permission denied, stat '/r/locked.m4a'"), { code: "EACCES" });
+    };
+    await expect(validateAudioFile("/r/locked.m4a", "posix", deniedStat)).rejects.toThrow(
+      "Something went wrong transcribing locked.m4a: EACCES: permission denied, stat '/r/locked.m4a'. Tell Dad if it keeps happening.",
+    );
+  });
 });

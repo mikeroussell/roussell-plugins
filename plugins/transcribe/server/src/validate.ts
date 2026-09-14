@@ -39,8 +39,11 @@ export async function validateAudioFile(
   let stat: StatLike;
   try {
     stat = await statFn(audioPath);
-  } catch {
-    throw new TranscribeError(MESSAGES.notFound(audioPath));
+  } catch (err) {
+    const code = (err as { code?: unknown })?.code;
+    if (code === "ENOENT" || code === "ENOTDIR") throw new TranscribeError(MESSAGES.notFound(audioPath));
+    const reason = err instanceof Error && err.message ? err.message.split(/\r?\n/, 1)[0] : "unknown error";
+    throw new TranscribeError(MESSAGES.generic(displayName(audioPath), reason));
   }
 
   if (stat.isDirectory()) throw new TranscribeError(MESSAGES.isFolder(audioPath));
