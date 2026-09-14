@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -111,5 +111,19 @@ describe("transcribeAudio", () => {
     await transcribeAudio({ file_path: audioPath, overwrite: false }, deps(happy));
     const names = await readdir(dir);
     expect(names.sort()).toEqual(["bio-lecture-3.m4a", "bio-lecture-3.transcript.md"]);
+  });
+
+  it("reports an unreadable existing transcript instead of silently re-transcribing", async () => {
+    const existing = path.join(dir, "bio-lecture-3.transcript.md");
+    await writeFile(existing, "locked\n");
+    await chmod(existing, 0o000);
+    try {
+      await expect(transcribeAudio({ file_path: audioPath, overwrite: false }, deps(happy))).rejects.toThrow(
+        /^Something went wrong transcribing bio-lecture-3\.m4a: EACCES: permission denied/,
+      );
+      expect(happy).not.toHaveBeenCalled();
+    } finally {
+      await chmod(existing, 0o644);
+    }
   });
 });

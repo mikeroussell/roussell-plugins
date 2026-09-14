@@ -27,11 +27,15 @@ export interface TranscribeDeps {
   platform: Platform;
 }
 
-async function readExisting(filePath: string): Promise<string | null> {
+/** Returns the existing transcript, null when there is none, and throws for any other read failure. */
+async function readExisting(filePath: string, name: string): Promise<string | null> {
   try {
     return await readFile(filePath, "utf8");
-  } catch {
-    return null;
+  } catch (err) {
+    const code = (err as { code?: unknown })?.code;
+    if (code === "ENOENT" || code === "ENOTDIR") return null;
+    const reason = err instanceof Error && err.message ? err.message.split(/\r?\n/, 1)[0] : "unknown error";
+    throw new TranscribeError(MESSAGES.generic(name, reason));
   }
 }
 
@@ -59,7 +63,7 @@ export async function transcribeAudio(input: TranscribeInput, deps: TranscribeDe
   const name = displayName(audioPath);
 
   if (!input.overwrite) {
-    const existing = await readExisting(transcriptPath);
+    const existing = await readExisting(transcriptPath, name);
     if (existing !== null) {
       return {
         transcript_path: transcriptPath,
